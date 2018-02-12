@@ -9,5 +9,7 @@ npm install
 ### Usage :
 
 ```sh
-node wikiscrap.js [wiki article]
+node philofinder.js [wiki article]
 ```
+
+(Only work with french wikipedia)
