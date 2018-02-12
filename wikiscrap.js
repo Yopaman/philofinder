@@ -9,6 +9,7 @@ let wikiscrap = {
 			let $ = cheerio.load(body)
 			if ($(".mw-parser-output").length) {
 				$('.mw-parser-output > p a').each((i, link) => {
+					if ($(link).attr('class') == "mw-selflink selflink") { return true }
 	                let href = $(link).attr('href')
 	                let article = href.split("/");
 	                article = article[article.length - 1];
