@@ -23,6 +23,8 @@ let wikiscrap = {
 
 	                if (href.match(/Wikipedia:/i)) { return true }
 
+	                if (href.match(/Aide:/i)) { return true }
+
 	                if (href.match(/File:/i)) { return true }
 
 	                if (href.match(/wiki\/API/)) {return true }
@@ -39,28 +41,33 @@ let wikiscrap = {
 	                return false;
         		})
 			} else {
-				console.log("Erreur, cette page n'existe pas sur wikipedia !")
+				finishedEmitter.emit("error", "Cette page wikipedia n'existe pas !")
 			}
-			
 		})	
 	}
 }
 
-let firstLinkName, firstLink, i = 0
+if (process.argv.length == 3) {
+	let firstLinkName, firstLink, i = 0
 
-console.log("start : " + process.argv[2])
+	console.log("start : " + process.argv[2])
 
-wikiscrap.getFirstLink('https://fr.wikipedia.org/wiki/' + process.argv[2].replace(" ", "_"))
+	wikiscrap.getFirstLink('https://fr.wikipedia.org/wiki/' + process.argv[2].replace(" ", "_"))
 
-finishedEmitter.on("finished", (data) => {
-	firstLink = data.firstLink
-	firstLinkName = data.firstLinkName
-	i++
-	console.log(i + ". " + data.firstLinkName + " [" + data.firstLink + "] ")
-	if (firstLink != "https://fr.wikipedia.org/wiki/Philosophie") {
-		wikiscrap.getFirstLink(firstLink)
-	}
-})
+	finishedEmitter.on("finished", (data) => {
+		firstLink = data.firstLink
+		firstLinkName = data.firstLinkName
+		i++
+		console.log(i + ". " + data.firstLinkName + " [" + data.firstLink + "] ")
+		if (firstLink != "https://fr.wikipedia.org/wiki/Philosophie") {
+			wikiscrap.getFirstLink(firstLink)
+		}
+	})
+} else {
+	console.log("Utilisation : node wikiscrap.js [article]")
+}
+
+
 
 
 
