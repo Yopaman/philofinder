@@ -1,41 +1,56 @@
-const https = require("https");
-const cheerio = require('cheerio');
-const EventEmitter = require('events').EventEmitter;
-const finishedEmitter = new EventEmitter();
+const request = require('request')
+const cheerio = require('cheerio')
+const EventEmitter = require('events').EventEmitter
+const finishedEmitter = new EventEmitter()
 
 let wikiscrap = {
 	getFirstLink(link) {
-		https.get(link, (res) => {
+		request(link, (err, res, body) => {
+			let $ = cheerio.load(body)
+			if ($(".mw-parser-output").length) {
+				$('.mw-parser-output > p a').each((i, link) => {
+	                let href = $(link).attr('href')
+	                let article = href.split("/");
+	                article = article[article.length - 1];
 
-			let data = ''
+	                let paren_regex = new RegExp("\\((.*?" + article + ".*?)\\)")
 
-			res.on('data', (chunk) => {
-				data += chunk
-			})
+	                let from_regex = new RegExp(article + ":")
 
-			res.on('end', () => {
-				var $ = cheerio.load(data)
-				let firstA = $('.mw-parser-output').children("p").first().children('a').first(),
-				paragraph = $('.mw-parser-output:first-child') /*.children('p').first().children('a').first()*/
+	                let from2_regex = new RegExp("from [A-Za-z\-\_]+: " + article)
 
-				while (firstA == undefined) {
-					paragraph = paragraph.next()
-					firstA = paragraph.children("a").first()
-				}
-				
-				finishedEmitter.emit("finished", {firstLink: 'https://fr.wikipedia.org' + firstA.attr('href'), firstLinkName: firstA.text()})
-			})
-		}).on('error', (err) => {
-			console.log('Error: ' + err.message)
-		})
+	                let text = $(link).parent().text()
+
+	                if (href.match(/Wikipedia:/i)) { return true }
+
+	                if (href.match(/File:/i)) { return true }
+
+	                if (href.match(/wiki\/API/)) {return true }
+
+	                if (href.indexOf(".") !== -1) { return true }
+
+	                if (href.match(/#/)) { return true }
+
+	                if (text.match(from_regex)) { return true }
+	                if (text.match(from2_regex)) { return true }
+	                if (text.match(paren_regex)) { return true }
+
+	                finishedEmitter.emit("finished", {firstLink: 'https://fr.wikipedia.org' + href, firstLinkName: $(link).text()})
+	                return false;
+        		})
+			} else {
+				console.log("Erreur, cette page n'existe pas sur wikipedia !")
+			}
+			
+		})	
 	}
-} 
+}
 
 let firstLinkName, firstLink, i = 0
 
 console.log("start : " + process.argv[2])
 
-wikiscrap.getFirstLink('https://fr.wikipedia.org/wiki/' + process.argv[2])
+wikiscrap.getFirstLink('https://fr.wikipedia.org/wiki/' + process.argv[2].replace(" ", "_"))
 
 finishedEmitter.on("finished", (data) => {
 	firstLink = data.firstLink
